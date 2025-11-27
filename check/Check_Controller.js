@@ -3,13 +3,13 @@ import { scanURL } from "../services/urlChecker.service.js";
 export const check_url = async (req, res) => {
   const data = req.body;
 
-  // ✅ SINGLE URL MODE
+  // ✅ SINGLE URL 
   if (data.url) {
     const result = await scanURL(data.url);
     return res.json(formatResult(result));
   }
 
-  // ✅ BULK MODE
+  //  BULK
   if (Array.isArray(data)) {
     const results = [];
 
@@ -30,7 +30,7 @@ export const check_url = async (req, res) => {
   });
 };
 
-// ✅ Unified result formatter
+//  Unified result formatter
 function formatResult(result) {
   let status = "safe";
   if (result.score >= 7) status = "malicious";

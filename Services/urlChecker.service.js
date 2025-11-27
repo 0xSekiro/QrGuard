@@ -15,7 +15,7 @@ export async function scanURL(url) {
     redirects: 0
   };
 
-  // ✅ 1. Validate URL
+  //  1. Validate URL
   if (!validator.isURL(url, { require_protocol: true })) {
     result.score += 6;
     result.flags.push("Invalid URL format");
@@ -25,19 +25,19 @@ export async function scanURL(url) {
   const parsed = new URL(url);
   const domain = parsed.hostname;
 
-  // ✅ 2. Shortener Detection
+  //  2. Shortener Detection
   if (SHORTENERS.includes(domain)) {
     result.score += 2;
     result.flags.push("URL shortener detected");
   }
 
-  // ✅ 3. Raw IP URL Detection
+  //  3. Raw IP URL Detection
   if (validator.isIP(domain)) {
     result.score += 4;
     result.flags.push("Raw IP address used in URL");
   }
 
-  // ✅ 4. DNS → IP Resolution
+  //  4. DNS → IP Resolution
   try {
     const dnsResult = await dns.lookup(domain);
     result.ip = dnsResult.address;
@@ -46,19 +46,19 @@ export async function scanURL(url) {
     result.flags.push("DNS lookup failed");
   }
 
-  // ✅ 5. Phishing Keywords
+  // 5. Phishing Keywords
   if (/\b(login|verify|secure|update|confirm|free|reward)\b/i.test(parsed.pathname)) {
     result.score += 2;
     result.flags.push("Phishing keyword detected in path");
   }
 
-  // ✅ 6. Dangerous File Extensions
+  //  6. Dangerous File Extensions
   if (/\.(exe|apk|ipa|zip|rar|bat)$/i.test(parsed.pathname)) {
     result.score += 4;
     result.flags.push("Dangerous file extension detected");
   }
 
-  // ✅ 7. REAL Redirect Chain Detection
+  //  7. REAL Redirect Chain Detection
   try {
     let currentURL = url;
     let redirectCount = 0;
