@@ -1,0 +1,15 @@
+{
+  "workspace": {
+    "id": "58de8a2a-e2ce-4b6f-802a-10a82506c709"
+  },
+  "entities": {
+    "collections": [
+      "..\\postman\\collections\\API Documentation #reference.postman_collection.json",
+      "..\\postman\\collections\\RESTful API Basics #blueprint.postman_collection.json"
+    ],
+    "environments": [],
+    "specs": [],
+    "flows": [],
+    "globals": []
+  }
+}
