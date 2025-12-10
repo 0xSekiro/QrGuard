@@ -1,6 +1,15 @@
-import express from "express"
+const express = require("express");
 const app = express();
-import checkRoutes from './check/Check_routes.js';
+require('dotenv').config(); // load .env variables
+const mongoose = require("mongoose");
+mongoose.connect(process.env.DB_LINK).then(() => {
+  console.log("DB connected successfully");
+});
+
+
+const checkRoutes = require("./routes/Check_routes");
+const authRoutes = require("./routes/auth_route");
+
 
 
 
@@ -8,10 +17,10 @@ app.use(express.static('public'));
 app.use(express.json());
 
 app.use(checkRoutes);
+app.use(authRoutes)
  
 
 app.get('/',(req,res,next) => {
-
     res.json({msg:"working well"});
 });
 
