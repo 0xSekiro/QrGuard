@@ -1,14 +1,17 @@
 const express = require("express");
 const app = express();
 require('dotenv').config(); // load .env variables
+const API_KEY =process.env.VT_API_KEY;
 const mongoose = require("mongoose");
-mongoose.connect(process.env.DB_LINK).then(() => {
-  console.log("DB connected successfully");
-});
+mongoose.connect(process.env.DB_LINK)
+  .then(() => console.log("DB connected successfully"))
+  .catch(err => console.error("DB connection error:", err));
+
 
 
 const checkRoutes = require("./routes/Check_routes");
 const authRoutes = require("./routes/auth_route");
+const ScanRoutes = require("./routes/VirusTotal_route");
 
 
 
@@ -18,6 +21,7 @@ app.use(express.json());
 
 app.use(checkRoutes);
 app.use(authRoutes)
+app.use(ScanRoutes);
  
 
 app.get('/',(req,res,next) => {
