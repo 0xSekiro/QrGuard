@@ -7,11 +7,22 @@ const SHORTENERS = [
   "bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly"
 ];
 
-// XSS and SQL Regex
 const XSS_PAYLOADS = /(<script>|onerror=|onload=|javascript:|"><|<\/script>)/i;
 const SQLI_PAYLOADS = /('|;|--|\/\*|\bselect\b|\bdrop\b|\binsert\b|\bunion\b)/i;
 
-async function scanURL(url) {
+async function scanURL(input) {
+
+  // 🔒 VALIDATION
+  if (!input || typeof input !== "string") {
+    throw new Error("scanURL expects a URL string");
+  }
+
+  // 🔧 NORMALIZATION
+  let url = input.trim();
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    url = "http://" + url;
+  }
+
   const result = {
     url,
     ip: null,
@@ -21,28 +32,36 @@ async function scanURL(url) {
     sslValid: false
   };
 
-  // 1. Check for HTTP (insecure)
+  // 1️⃣ Insecure HTTP
   if (url.startsWith("http://")) {
     result.score += 6;
     result.flags.push("Insecure URL (HTTP instead of HTTPS)");
   }
 
-  const parsed = new URL(url);
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    result.score += 10;
+    result.flags.push("Invalid URL format");
+    return result;
+  }
+
   const domain = parsed.hostname;
 
-  // 2. Shortener Detection
+  // 2️⃣ Shortener
   if (SHORTENERS.includes(domain)) {
     result.score += 2;
     result.flags.push("URL shortener detected");
   }
 
-  // 3. Raw IP Detection
+  // 3️⃣ Raw IP
   if (validator.isIP(domain)) {
     result.score += 4;
     result.flags.push("Raw IP address used in URL");
   }
 
-  // 4. DNS lookup
+  // 4️⃣ DNS lookup
   try {
     const dnsResult = await dns.lookup(domain);
     result.ip = dnsResult.address;
@@ -51,19 +70,19 @@ async function scanURL(url) {
     result.flags.push("DNS lookup failed");
   }
 
-  // 5. Phishing keywords
+  // 5️⃣ Phishing keywords
   if (/\b(login|verify|secure|update|confirm|free|reward)\b/i.test(parsed.pathname)) {
     result.score += 2;
     result.flags.push("Phishing keyword detected");
   }
 
-  // 6. Dangerous extensions
+  // 6️⃣ Dangerous extensions
   if (/\.(exe|apk|ipa|zip|rar|bat)$/i.test(parsed.pathname)) {
     result.score += 4;
     result.flags.push("Dangerous file extension");
   }
 
-  // 7. Redirect chain detection
+  // 7️⃣ Redirects
   try {
     let currentURL = url;
     let redirectCount = 0;
@@ -79,9 +98,7 @@ async function scanURL(url) {
         currentURL = location.startsWith("http")
           ? location
           : new URL(location, currentURL).href;
-      } else {
-        break;
-      }
+      } else break;
     }
 
     if (redirectCount > 0) {
@@ -89,19 +106,18 @@ async function scanURL(url) {
       result.score += redirectCount * 2;
       result.flags.push(`Redirect chain detected (${redirectCount})`);
     }
-
   } catch {
     result.score += 2;
     result.flags.push("Connection failed or blocked");
   }
 
-  // 8. XSS
+  // 8️⃣ XSS
   if (XSS_PAYLOADS.test(url)) {
     result.score += 6;
     result.flags.push("Potential XSS payload");
   }
 
-  // 9. SQLi
+  // 9️⃣ SQLi
   if (SQLI_PAYLOADS.test(url)) {
     result.score += 6;
     result.flags.push("Potential SQL Injection payload");

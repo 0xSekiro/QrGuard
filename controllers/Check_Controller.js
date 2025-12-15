@@ -1,52 +1,64 @@
-const { scanURL } = require("../Services/urlChecker.service");
+const { scanURL } = require("../Services/urlChecker.service.js");
+const { VirusTotalScan } = require("../Services/VirusTotal.service.js");
+const { generateAIReport } = require("../Services/Aireport.service");
 
 async function check_url(req, res) {
-  const data = req.body;
+  try {
+    const { url } = req.body;
 
-  // ✅ SINGLE URL 
-  if (data.url) {
-    const result = await scanURL(data.url);
-    return res.json(formatResult(result));
-  }
-
-  //  BULK
-  if (Array.isArray(data)) {
-    const results = [];
-
-    for (const item of data) {
-      if (!item.url) continue;
-      const scan = await scanURL(item.url);
-      results.push(formatResult(scan));
+    if (!url || typeof url !== "string") {
+      return res.status(400).json({ error: "URL must be a string" });
     }
 
-    return res.json({
-      total: results.length,
-      results
+    const normalized = url.trim();
+
+    // 1️⃣ Run your custom URL scanner
+    const myScanResult = await scanURL(normalized);
+
+    // 2️⃣ Run VirusTotal scan
+    const { analysisId, report } = await VirusTotalScan(normalized);
+
+    // You can keep risk_score/summary if you want
+    const stats = report.data.attributes.stats;
+    const total = stats.malicious + stats.suspicious + stats.harmless + stats.undetected;
+    const vt_risk_score = total > 0 ? Math.round((stats.malicious + stats.suspicious * 0.5) / total * 100) : 0;
+
+    let vt_verdict, vt_color;
+    if (vt_risk_score === 0) { vt_verdict = "clean"; vt_color = "green"; }
+    else if (vt_risk_score <= 20) { vt_verdict = "safe"; vt_color = "lightgreen"; }
+    else if (vt_risk_score <= 50) { vt_verdict = "suspicious"; vt_color = "yellow"; }
+    else { vt_verdict = "malicious"; vt_color = "red"; }
+
+    const virustotal = {
+      analysisId,
+      risk_score: vt_risk_score,
+      verdict: vt_verdict,
+      color: vt_color,
+      full_report: report.data // ✅ full VirusTotal JSON
+    };
+
+    // 3️⃣ Optional AI report
+    // const ai_report = await generateAIReport({
+    //   url: normalized,
+    //   myScanResult,
+    //   virustotal,
+    // });
+
+    // 4️⃣ Return everything
+    res.json({
+      url: normalized,
+      my_api: myScanResult,
+      virustotal,
+      // ai_report,
+    });
+
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    res.status(500).json({
+      error: "URL scan failed",
+      details: err.response?.data || err.message,
     });
   }
-
-  return res.status(400).json({
-    error: "Send either { url } or [ { url }, { url } ]"
-  });
 }
 
-//  Unified result formatter
-function formatResult(result) {
-  let status = "safe";
-  if (result.score >= 7) status = "malicious";
-  else if (result.score >= 3) status = "suspicious";
-
-  return {
-    url: result.url,
-    ip: result.ip,
-    status,
-    score: result.score,
-    flags: result.flags,
-    redirects: result.redirects
-  };
-}
-
-// Export for CommonJS
-module.exports = {
-  check_url
-};
+module.exports = { check_url };

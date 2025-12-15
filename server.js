@@ -11,8 +11,6 @@ mongoose.connect(process.env.DB_LINK)
 
 const checkRoutes = require("./routes/Check_routes");
 const authRoutes = require("./routes/auth_route");
-const ScanRoutes = require("./routes/VirusTotal_route");
-
 
 
 
@@ -21,7 +19,7 @@ app.use(express.json());
 
 app.use(checkRoutes);
 app.use(authRoutes)
-app.use(ScanRoutes);
+
  
 
 app.get('/',(req,res,next) => {
