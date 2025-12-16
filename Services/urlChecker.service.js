@@ -123,6 +123,7 @@ async function scanURL(input) {
     result.flags.push("Potential SQL Injection payload");
   }
 
+  result.status = result.score === 0 ? "safe" : "malicious";
   return result;
 }
 

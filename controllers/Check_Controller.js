@@ -1,6 +1,8 @@
 const { scanURL } = require("../Services/urlChecker.service.js");
 const { VirusTotalScan } = require("../Services/VirusTotal.service.js");
-const { generateAIReport } = require("../Services/Aireport.service");
+// const { generateAIReport } = require("../Services/Aireport.service");
+const LinkScan = require("../models/linkModel.js");
+
 
 async function check_url(req, res) {
   try {
@@ -11,6 +13,16 @@ async function check_url(req, res) {
     }
 
     const normalized = url.trim();
+
+    const existingScan = await LinkScan.findOne({ link: normalized });
+
+    if (existingScan) {
+      // ✅ FOUND → return cached result
+      return res.json({
+        cached: true,
+        data: JSON.parse(existingScan.response),
+      });
+    }
 
     // 1️⃣ Run your custom URL scanner
     const myScanResult = await scanURL(normalized);
@@ -36,21 +48,30 @@ async function check_url(req, res) {
       color: vt_color,
       full_report: report.data // ✅ full VirusTotal JSON
     };
-
-    // 3️⃣ Optional AI report
-    // const ai_report = await generateAIReport({
-    //   url: normalized,
-    //   myScanResult,
-    //   virustotal,
-    // });
-
-    // 4️⃣ Return everything
-    res.json({
+    
+    const responsePayload1 = {
       url: normalized,
-      my_api: myScanResult,
+      qr_guard: myScanResult,
       virustotal,
-      // ai_report,
+    };
+
+    res.json({
+      cached: false,
+      data: responsePayload1
     });
+
+    const responsePayload2 = {
+      url: normalized,
+      qr_guard: myScanResult,
+      virustotal,
+    };
+
+    await LinkScan.create({
+      link: normalized,                          // string
+      response: JSON.stringify(responsePayload2), // string
+    });
+
+    
 
   } catch (err) {
     console.error(err.response?.data || err.message);
