@@ -116,9 +116,9 @@ exports.forgotPassword = async (req, res) => {
     // send email
     let msg;
     if (process.env.ENV == "development") {
-      msg = `Forgot your password? send PATCH request with password and passwordConfirm to http://localhost:3000/resetPassword/${generatedToken} \n( Token valid for 10 min )\n`;
+      msg = `Forgot your password? send PATCH request with password and passwordConfirm to https://qrrr.vercel.app/resetPassword/${generatedToken} \n( Token valid for 10 min )\n`;
     } else {
-      msg = `Forgot your password? send GET request to https://magedmagdy.github.io/reset/${generatedToken} \n( Token valid for 10 min )\n`;
+      msg = `Forgot your password? send GET request to https://qrrr.vercel.app/reset/${generatedToken} \n( Token valid for 10 min )\n`;
     }
 
     await transporter.sendMail({
@@ -199,6 +199,6 @@ exports.logWithGoogle = (req, res) => {
   res
     .status(302)
     .redirect(
-      `http://localhost:3000/google/callback/${token}` // change this to front-end here and in .env
+      `https://qrrr.vercel.app/google/callback/${token}` // change this to front-end here and in .env
     );
 };
