@@ -1,5 +1,25 @@
 const express = require("express");
 const app = express();
+
+// CORS
+const cors = require("cors");
+app.use(cors());
+
+// Prevent NOSQLI
+
+const expressMongoSanitize = require("@exortek/express-mongo-sanitize");
+
+app.use(expressMongoSanitize());
+
+// Rate limit 
+
+const rateLimit = require("express-rate-limit");
+const limiter = rateLimit({
+  windowMs: 2 * 60 * 1000, // 1 minutes
+  max: 50, // Limit each IP to 50 requests per `window` (here, per 2 minutes)
+});
+app.use(limiter);
+
 require('dotenv').config(); // load .env variables
 const API_KEY =process.env.VT_API_KEY;
 const mongoose = require("mongoose");

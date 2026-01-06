@@ -4,6 +4,14 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const errHandler = require("../controllers/error_controller");
 const transporter = require("../Services/nodeMailer");
+const SibApiV3Sdk = require('sib-api-v3-sdk');
+
+// Initialize client
+const client = SibApiV3Sdk.ApiClient.instance;
+client.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
+
+// Create transactional email API instance
+const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
 function signToken(id) {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -114,19 +122,26 @@ exports.forgotPassword = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     // send email
-    let msg;
-    if (process.env.ENV == "development") {
-      msg = `Forgot your password? send PATCH request with password and passwordConfirm to http://localhost:3000/resetPassword/${generatedToken} \n( Token valid for 10 min )\n`;
-    } else {
-      msg = `Forgot your password? send GET request to https://magedmagdy.github.io/reset/${generatedToken} \n( Token valid for 10 min )\n`;
+
+    async function sendEmail(to, subject, text, html = null) {
+      try {
+        const emailData = {
+          sender: { email: process.env.BREVO_SENDER_EMAIL },
+          to: [{ email: to }],
+          subject: subject,
+          textContent: text,
+          htmlContent: html || `<p>${text}</p>`
+        };
+    
+        await tranEmailApi.sendTransacEmail(emailData);
+        console.log(`Email sent to ${to}!`);
+      } catch (err) {
+        console.error('Error sending email:', err.response?.body || err);
+      }
     }
 
-    await transporter.sendMail({
-      from: "mohamed0xmuslim@gmail.com",
-      to: req.body.email,
-      subject: "Reset password link",
-      html: msg,
-    });
+    let msg = "Click here to reset your password: https://qr-psi-five.vercel.app/auth/reset/" + generatedToken;
+    await sendEmail(req.body.email, "Reset", msg)
 
     res.status(200).json({
       status: "success",
@@ -143,7 +158,7 @@ exports.resetPassword = async (req, res) => {
   try {
     const token = crypto
       .createHash("sha256")
-      .update(req.params.token)
+      .update(req.query.token)
       .digest("hex");
     const user = await User.findOne({
       resetToken: token,
@@ -199,6 +214,6 @@ exports.logWithGoogle = (req, res) => {
   res
     .status(302)
     .redirect(
-      `http://localhost:3000/google/callback/${token}` // change this to front-end here and in .env
+      `https://qr-psi-five.vercel.app/google/callback/${token}` // change this to front-end here and in .env
     );
 };
