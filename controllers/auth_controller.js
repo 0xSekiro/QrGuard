@@ -122,6 +122,7 @@ exports.forgotPassword = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     // send email
+<<<<<<< HEAD
 
     async function sendEmail(to, subject, text, html = null) {
       try {
@@ -138,6 +139,13 @@ exports.forgotPassword = async (req, res) => {
       } catch (err) {
         console.error('Error sending email:', err.response?.body || err);
       }
+=======
+    let msg;
+    if (process.env.ENV == "development") {
+      msg = `Forgot your password? send PATCH request with password and passwordConfirm to https://qrrr.vercel.app/resetPassword/${generatedToken} \n( Token valid for 10 min )\n`;
+    } else {
+      msg = `Forgot your password? send GET request to https://qrrr.vercel.app/reset/${generatedToken} \n( Token valid for 10 min )\n`;
+>>>>>>> 6f8deb69a303597825fdc72ccbac0b0a9a7decc1
     }
 
     let msg = "Click here to reset your password: https://qr-psi-five.vercel.app/auth/reset/" + generatedToken;
@@ -214,6 +222,10 @@ exports.logWithGoogle = (req, res) => {
   res
     .status(302)
     .redirect(
+<<<<<<< HEAD
       `https://qr-psi-five.vercel.app/google/callback/${token}` // change this to front-end here and in .env
+=======
+      `https://qrrr.vercel.app/google/callback/${token}` // change this to front-end here and in .env
+>>>>>>> 6f8deb69a303597825fdc72ccbac0b0a9a7decc1
     );
 };
