@@ -214,6 +214,6 @@ exports.logWithGoogle = (req, res) => {
   res
     .status(302)
     .redirect(
-      `https://qr-psi-five.vercel.app/google/callback/${token}` // change this to front-end here and in .env
+      `https://qr-psi-five.vercel.app/google/callback/${token}`
     );
 };

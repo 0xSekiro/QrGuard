@@ -14,11 +14,20 @@ router.post("/resetPassword/:token", authController.resetPassword);
 
 router.route("/google").get(
   passport.authenticate("google", {
-    scope: ["profile"],
+    scope: [
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/userinfo.email"
+    ]
   })
 );
-router.get(
-  "/google/callback",
+
+router.get("/google/callback", 
+  (req, res, next) => {
+    console.log('=== CALLBACK HIT ===');
+    console.log('Query params:', req.query);
+    console.log('Full URL:', req.url);
+    next();
+  },
   passport.authenticate("google", { failureRedirect: "/", session: false }),
   authController.logWithGoogle
 );

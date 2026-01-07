@@ -5,11 +5,11 @@ const app = express();
 const cors = require("cors");
 app.use(cors());
 
-// Prevent NOSQLI
+// // Prevent NOSQLI
 
-const expressMongoSanitize = require("@exortek/express-mongo-sanitize");
+// const expressMongoSanitize = require("@exortek/express-mongo-sanitize");
 
-app.use(expressMongoSanitize());
+// app.use(expressMongoSanitize());
 
 // Rate limit 
 
