@@ -156,14 +156,22 @@ exports.forgotPassword = async (req, res) => {
 
 exports.resetPassword = async (req, res) => {
   try {
+    console.log("1. Received token:", req.params.token);
+
     const token = crypto
       .createHash("sha256")
-      .update(req.query.token)
+      .update(req.params.token)
       .digest("hex");
+
+      
+    console.log("2. Hashed token:", token);
+
     const user = await User.findOne({
       resetToken: token,
       expireToken: { $gt: Date.now() },
     });
+
+    console.log("3. User found:", user ? "Yes" : "No");
 
     if (!user)
       return res
@@ -197,6 +205,7 @@ exports.resetPassword = async (req, res) => {
     try {
       await user.save();
     } catch (err) {
+      console.log(err);
       return errHandler.returnError(500, "Something went wrong", res);
     }
 
