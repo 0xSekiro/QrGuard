@@ -106,7 +106,6 @@ async function scanURL(input) {
 
     if (redirectCount > 0) {
       result.redirects = redirectCount;
-      result.score += redirectCount * 2;
       result.score += 10;
       result.flags.push(`Redirect chain detected (${redirectCount})`);
     }
