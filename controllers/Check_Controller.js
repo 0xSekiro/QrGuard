@@ -1,8 +1,8 @@
 const { scanURL } = require("../Services/urlChecker.service.js");
 const { VirusTotalScan } = require("../Services/VirusTotal.service.js");
-const { explainRisk } = require("../Services/explainer.service");
-const { generateSafetyReport } = require("../Services/report.service");
-const { generateAIExplanation } = require("../Services/Aireport.service");
+const { explainRisk } = require("../Services/SmartExplainer.service");
+const { generateSafetyReport } = require("../Services/ReportGenerator.service");
+const { generateAIExplanation } = require("../Services/AIReport.service");
 const LinkScan = require("../models/linkModel.js");
 
 
