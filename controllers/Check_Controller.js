@@ -1,6 +1,8 @@
 const { scanURL } = require("../Services/urlChecker.service.js");
 const { VirusTotalScan } = require("../Services/VirusTotal.service.js");
-// const { generateAIReport } = require("../Services/Aireport.service");
+const { explainRisk } = require("../Services/explainer.service");
+const { generateSafetyReport } = require("../Services/report.service");
+const { generateAIExplanation } = require("../Services/Aireport.service");
 const LinkScan = require("../models/linkModel.js");
 
 
@@ -49,22 +51,24 @@ async function check_url(req, res) {
       full_report: report.data // ✅ full VirusTotal JSON
     };
     
-    const responsePayload1 = {
-      url: normalized,
-      qr_guard: myScanResult,
-      virustotal,
-    };
+      const aiExplanation = await generateAIExplanation({
+    qr_guard: myScanResult,
+    virustotal
+  });
+
+  const responsePayload1 = {
+    url: normalized,
+    qr_guard: myScanResult,
+    virustotal,
+    ai_explanation: aiExplanation // ✅ added ONLY this
+  };
 
     res.json({
       cached: false,
       data: responsePayload1
     });
 
-    const responsePayload2 = {
-      url: normalized,
-      qr_guard: myScanResult,
-      virustotal,
-    };
+    const responsePayload2 = responsePayload1;
 
     await LinkScan.create({
       link: normalized,                          // string
