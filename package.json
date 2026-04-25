@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "@exortek/express-mongo-sanitize": "^1.1.1",
+    "@google/generative-ai": "^0.24.1",
     "@sendgrid/mail": "^8.1.6",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
