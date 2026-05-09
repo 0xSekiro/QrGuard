@@ -1,15 +1,11 @@
 const dns = require("dns").promises;
 const fetch = require("node-fetch");
 const validator = require("validator");
-const tls = require("tls");
-
-
 
 const XSS_PAYLOADS = /(<script>|onerror=|onload=|javascript:|"><|<\/script>)/i;
 const SQLI_PAYLOADS = /('|;|--|\/\*|\bselect\b|\bdrop\b|\binsert\b|\bunion\b)/i;
 
 async function scanURL(input) {
-
   // 🔒 VALIDATION
   if (!input || typeof input !== "string") {
     throw new Error("scanURL expects a URL string");
@@ -27,41 +23,41 @@ async function scanURL(input) {
     score: 0,
     flags: [],
     redirects: 0,
-    sslValid: false
+    status: "safe",
   };
 
-  // 1️⃣ Insecure HTTP
-  if (url.startsWith("http://")) {
-    result.score += 10;
-    result.flags.push("Insecure URL (HTTP instead of HTTPS)");
-  }
-
   let parsed;
+
   try {
     parsed = new URL(url);
   } catch {
-    result.score += 10;
-    result.flags.push("Invalid URL format");
-    return result;
+    return {
+      ...result,
+      score: 10,
+      status: "malicious",
+      flags: ["Invalid URL format"],
+    };
   }
 
   const domain = parsed.hostname;
 
-  // 2️⃣ Shortener
+  // 1️⃣ HTTP check
+  if (url.startsWith("http://")) {
+    result.score += 10;
+    result.flags.push("Insecure HTTP connection");
+  }
 
-  const SHORTENERS = [
-    "bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly"
-  ];
-
+  // 2️⃣ URL shorteners
+  const SHORTENERS = ["bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly"];
   if (SHORTENERS.includes(domain)) {
     result.score += 10;
     result.flags.push("URL shortener detected");
   }
 
-  // 3️⃣ Raw IP
+  // 3️⃣ Raw IP check
   if (validator.isIP(domain)) {
     result.score += 10;
-    result.flags.push("Raw IP address used in URL"); 
+    result.flags.push("Raw IP address used");
   }
 
   // 4️⃣ DNS lookup
@@ -73,19 +69,19 @@ async function scanURL(input) {
     result.flags.push("DNS lookup failed");
   }
 
-  // 5️⃣ Phishing keywords
+  // 5️⃣ phishing keywords
   if (/\b(login|verify|secure|update|confirm|free|reward)\b/i.test(parsed.pathname)) {
     result.score += 10;
-    result.flags.push("Phishing keyword detected");
+    result.flags.push("Phishing keywords detected");
   }
 
-  // 6️⃣ Dangerous extensions
+  // 6️⃣ dangerous file extensions
   if (/\.(exe|apk|ipa|zip|rar|bat)$/i.test(parsed.pathname)) {
     result.score += 10;
     result.flags.push("Dangerous file extension");
   }
 
-  // 7️⃣ Redirects
+  // 7️⃣ redirect detection
   try {
     let currentURL = url;
     let redirectCount = 0;
@@ -101,7 +97,9 @@ async function scanURL(input) {
         currentURL = location.startsWith("http")
           ? location
           : new URL(location, currentURL).href;
-      } else break;
+      } else {
+        break;
+      }
     }
 
     if (redirectCount > 0) {
@@ -111,31 +109,25 @@ async function scanURL(input) {
     }
   } catch {
     result.score += 10;
-    result.flags.push("Connection failed or blocked");
+    result.flags.push("Connection failed");
   }
 
-  // 8️⃣ XSS
+  // 8️⃣ XSS detection
   if (XSS_PAYLOADS.test(url)) {
     result.score += 10;
-    result.flags.push("Potential XSS payload");
+    result.flags.push("XSS pattern detected");
   }
 
-  // 9️⃣ SQLi
+  // 9️⃣ SQL injection detection
   if (SQLI_PAYLOADS.test(url)) {
     result.score += 10;
-    result.flags.push("Potential SQL Injection payload");
+    result.flags.push("SQL injection pattern detected");
   }
 
+  // 🔟 FINAL STATUS
   result.status = result.score === 0 ? "safe" : "malicious";
+
   return result;
-
-
-  // 10 URL Length 
-
-  if (url.length > 150) {
-    result.score += 10;
-    return { safe: false, reason: "Unusually long URL" };
-  }
 }
 
 module.exports = { scanURL };

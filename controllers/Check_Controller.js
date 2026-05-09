@@ -38,11 +38,19 @@ async function check_url(req, res) {
     const vt_risk_score = total > 0 ? Math.round((stats.malicious + stats.suspicious * 0.5) / total * 100) : 0;
 
     let vt_verdict, vt_color;
-    if (vt_risk_score === 0) { vt_verdict = "clean"; vt_color = "green"; }
-    else if (vt_risk_score <= 20) { vt_verdict = "safe"; vt_color = "lightgreen"; }
-    else if (vt_risk_score <= 50) { vt_verdict = "suspicious"; vt_color = "yellow"; }
-    else { vt_verdict = "malicious"; vt_color = "red"; }
 
+    if (vt_risk_score <= 20) {
+      vt_verdict = "safe";
+      vt_color = "green";
+    } 
+    else if (vt_risk_score <= 60) {
+      vt_verdict = "suspicious";
+      vt_color = "yellow";
+    } 
+    else {
+      vt_verdict = "malicious";
+      vt_color = "red";
+    }
     const virustotal = {
       analysisId,
       risk_score: vt_risk_score,
@@ -70,17 +78,29 @@ try {
     ai_explanation: aiExplanation // ✅ added ONLY this
   };
 
-    res.json({
-      cached: false,
-      data: responsePayload1
-    });
+  res.json({
+  cached: false,
 
-    const responsePayload2 = responsePayload1;
+  report: {
+    url: normalized,
 
-    await LinkScan.create({
-      link: normalized,                          // string
-      response: JSON.stringify(responsePayload2), // string
-    });
+    qr_guard: {
+      status: myScanResult.status,
+      score: myScanResult.score,
+      ip: myScanResult.ip,
+      redirects: myScanResult.redirects,
+      flags: myScanResult.flags
+    },
+
+    virustotal: {
+      verdict: virustotal.verdict,
+      risk_score: virustotal.risk_score,
+      color: virustotal.color
+    },
+
+    ai_insight: aiExplanation ?? null
+  }
+});
 
     
 
