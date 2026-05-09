@@ -259,3 +259,28 @@ exports.updateUser = async (req, res) => {
     errHandler.returnError(500, "Something went wrong", res);
   }
 };
+
+exports.getUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user).select("-password -passwordConfirm");
+
+    if (!user) {
+      return res.status(404).json({
+        status: "fail",
+        message: "User not found"
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      user
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      status: "error",
+      message: "Server error"
+    });
+  }
+};

@@ -102,7 +102,7 @@ try {
 });
   await LinkScan.create({
       link: normalized,                          // string
-      response: JSON.stringify(responsePayload2), // string
+      response: JSON.stringify(responsePayload1), // string
     });
 
     
