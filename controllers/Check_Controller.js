@@ -25,7 +25,6 @@ async function check_url(req, res) {
         data: JSON.parse(existingScan.response),
       });
     }
-
     // 1️⃣ Run your custom URL scanner
     const myScanResult = await scanURL(normalized);
 
@@ -81,7 +80,7 @@ try {
   res.json({
   cached: false,
 
-  report: {
+  data: {
     url: normalized,
 
     qr_guard: {
@@ -101,6 +100,10 @@ try {
     ai_insight: aiExplanation ?? null
   }
 });
+  await LinkScan.create({
+      link: normalized,                          // string
+      response: JSON.stringify(responsePayload2), // string
+    });
 
     
 
