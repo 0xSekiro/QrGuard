@@ -51,10 +51,17 @@ async function check_url(req, res) {
       full_report: report.data // ✅ full VirusTotal JSON
     };
     
-      const aiExplanation = await generateAIExplanation({
+ let aiExplanation = null;
+
+try {
+  aiExplanation = await generateAIExplanation({
     qr_guard: myScanResult,
     virustotal
   });
+} catch (err) {
+  console.error("AI Generation failed:", err.message);
+  aiExplanation = null;
+}
 
   const responsePayload1 = {
     url: normalized,
