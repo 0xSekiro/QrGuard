@@ -226,3 +226,36 @@ exports.logWithGoogle = (req, res) => {
       `https://qr-psi-five.vercel.app/google/callback/${token}`
     );
 };
+
+exports.updateUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user);
+
+    if (!user) {
+      return errHandler.returnError(404, "User not found", res);
+    }
+
+    const { username, email, password, passwordConfirm } = req.body;
+
+    if (username) user.username = username;
+
+    if (email) user.email = email;
+
+    if (password) {
+      user.password = password;
+      user.passwordConfirm = passwordConfirm;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      status: "success",
+      message: "User updated successfully",
+      user,
+    });
+
+  } catch (err) {
+    console.log(err);
+    errHandler.returnError(500, "Something went wrong", res);
+  }
+};

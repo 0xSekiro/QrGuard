@@ -29,15 +29,19 @@ const userSchema = new mongoose.Schema(
       minLength: 8,
     },
     passwordConfirm: {
-      type: String,
-      required: [true, "Must confirm password"],
-      validate: {
-        validator: function (pass) {
-          return pass == this.password;
-        },
-        message: "Passwords are not the same",
-      },
+  type: String,
+
+  required: function () {
+    return this.isModified("password");
+  },
+
+  validate: {
+    validator: function (pass) {
+      return pass == this.password;
     },
+    message: "Passwords are not the same",
+  },
+},
     resetToken: String,
     expireToken: Date,
   },
