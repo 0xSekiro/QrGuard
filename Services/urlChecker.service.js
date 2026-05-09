@@ -124,10 +124,18 @@ async function scanURL(input) {
     result.flags.push("SQL injection pattern detected");
   }
 
-  // 🔟 FINAL STATUS
-  result.status = result.score === 0 ? "safe" : "malicious";
+ // 🔟 FINAL STATUS
+if (result.score <= 20) {
+  result.status = "safe";
+} 
+else if (result.score <= 40) {
+  result.status = "suspicious";
+} 
+else {
+  result.status = "malicious";
+}
 
-  return result;
+return result;
 }
 
 module.exports = { scanURL };
