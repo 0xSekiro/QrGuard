@@ -16,14 +16,16 @@ router
 
 // google auth
 
-router.route("/google").get(
+router.get("/google", (req, res, next) => {
   passport.authenticate("google", {
     scope: [
       "https://www.googleapis.com/auth/userinfo.profile",
-      "https://www.googleapis.com/auth/userinfo.email"
-    ]
-  })
-);
+      "https://www.googleapis.com/auth/userinfo.email",
+    ],
+    state: req.query.platform || "web",
+    session: false,
+  })(req, res, next);
+});
 
 router.get("/google/callback", 
   (req, res, next) => {

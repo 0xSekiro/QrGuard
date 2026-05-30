@@ -220,12 +220,23 @@ exports.resetPassword = async (req, res) => {
 
 exports.logWithGoogle = (req, res) => {
   const token = signToken(req.user._id);
-  res
+
+  const platform = req.query.state;
+
+  // Flutter app
+  if (platform === "mobile") {
+    return res
+      .status(302)
+      .redirect(`myapp://callback?token=${token}`);
+  }
+
+  // Website
+  return res
     .status(302)
     .redirect(
       `https://qr-psi-five.vercel.app/google/callback/${token}`
     );
-};
+  };
 
 exports.updateUser = async (req, res) => {
   try {
