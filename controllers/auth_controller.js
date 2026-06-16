@@ -240,7 +240,19 @@ exports.logWithGoogle = (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user);
+    const user = await User.findByIdAndUpdate(
+  req.user,
+  {
+    username,
+    email,
+    password,
+    passwordConfirm
+  },
+  {
+    new: true,
+    runValidators: true
+  }
+).select("-password -passwordConfirm");
 
     if (!user) {
       return errHandler.returnError(404, "User not found", res);
@@ -290,7 +302,7 @@ exports.getUser = async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).json({
-      status: "error",
+      status: "error",  
       message: "Server error"
     });
   }
