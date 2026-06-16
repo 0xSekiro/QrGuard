@@ -240,19 +240,7 @@ exports.logWithGoogle = (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(
-  req.user,
-  {
-    username,
-    email,
-    password,
-    passwordConfirm
-  },
-  {
-    new: true,
-    runValidators: true
-  }
-).select("-password -passwordConfirm");
+    const user = await User.findById(req.user);
 
     if (!user) {
       return errHandler.returnError(404, "User not found", res);
@@ -261,7 +249,6 @@ exports.updateUser = async (req, res) => {
     const { username, email, password, passwordConfirm } = req.body;
 
     if (username) user.username = username;
-
     if (email) user.email = email;
 
     if (password) {
@@ -271,15 +258,20 @@ exports.updateUser = async (req, res) => {
 
     await user.save();
 
-    res.status(200).json({
+    // remove sensitive data before sending response
+    const safeUser = user.toObject();
+    delete safeUser.password;
+    delete safeUser.passwordConfirm;
+
+    return res.status(200).json({
       status: "success",
       message: "User updated successfully",
-      user,
+      user: safeUser,
     });
 
   } catch (err) {
     console.log(err);
-    errHandler.returnError(500, "Something went wrong", res);
+    return errHandler.returnError(500, "Something went wrong", res);
   }
 };
 
